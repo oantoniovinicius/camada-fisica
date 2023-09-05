@@ -1,0 +1,55 @@
+#iniciar{
+    -fx-background-color: rgb(0, 0, 0);
+    -fx-font: 10pt "Arial";
+    -fx-font-weight: bold;
+    -fx-border-width: 4px;
+    -fx-border-radius: 20%;
+    -fx-border-color: rgb(248, 68, 68);
+}
+#iniciar:hover {
+    -fx-background-color:rgb(128, 128, 128);
+}
+
+#optionsBox{
+    -fx-background-color: rgb(0, 0, 0);
+    -fx-font: 14pt "Arial";
+    -fx-font-weight: bold;
+    -fx-border-width: 4px;
+    -fx-border-radius: 20%;
+    -fx-border-color: rgb(248, 68, 68);
+}
+
+#continueButton{
+    -fx-background-color: rgb(0, 0, 0);
+    -fx-font: 14pt "Arial";
+    -fx-font-weight: bold;
+    -fx-border-radius:50px;
+    -fx-border-width: 4px;
+    -fx-border-color: rgb(248, 68, 68);
+}
+#continueButton:hover {
+    -fx-background-color:rgb(128, 128, 128);
+}
+
+#sendButton{
+    -fx-background-color: rgb(0, 0, 0);
+    -fx-font: 12pt "Arial";
+    -fx-font-weight: bold;
+    -fx-border-radius:50px;
+    -fx-border-width: 4px;
+    -fx-border-color: rgb(248, 68, 68);
+}
+#sendButton:hover {
+    -fx-background-color:rgb(128, 128, 128);
+}
+#output {
+    -fx-text-fill: rgb(0,0,0);
+}
+#bitsText {
+    -fx-border-width: 4px;
+    -fx-border-color: rgb(0, 0, 0);
+}
+#asciiText {
+    -fx-border-width: 4px;
+    -fx-border-color: rgb(0, 0, 0);
+}
