@@ -4,7 +4,6 @@ import java.util.ResourceBundle;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -14,13 +13,10 @@ import javafx.fxml.Initializable;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.ChoiceBox;
-import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
-import javafx.scene.paint.Paint;
-import javafx.scene.text.Text;
 import model.*;
 
 public class MainControl implements Initializable{
@@ -43,11 +39,63 @@ public class MainControl implements Initializable{
   @FXML private ImageView dialogoEsquerdo;
   @FXML private ImageView signalRadio;
 
+  @FXML private ImageView highLowOne;
+  @FXML private ImageView highLowTwo;
+  @FXML private ImageView highLowThree;
+  @FXML private ImageView highLowFour;
+  @FXML private ImageView highLowFive;
+  @FXML private ImageView highLowSix;
+  @FXML private ImageView highLowSeven;
+  @FXML private ImageView highLowEight;
+
+  @FXML private ImageView highOne;
+  @FXML private ImageView highTwo;
+  @FXML private ImageView highThree;
+  @FXML private ImageView highFour;
+  @FXML private ImageView highFive;
+  @FXML private ImageView highSix;
+  @FXML private ImageView highSeven;
+  @FXML private ImageView highEight;
+
+  @FXML private ImageView lowHighOne;
+  @FXML private ImageView lowHighTwo;
+  @FXML private ImageView lowHighThree;
+  @FXML private ImageView lowHighFour;
+  @FXML private ImageView lowHighFive;
+  @FXML private ImageView lowHighSix;
+  @FXML private ImageView lowHighSeven;
+  @FXML private ImageView lowHighEight;
+
+  @FXML private ImageView lowOne;
+  @FXML private ImageView lowTwo;
+  @FXML private ImageView lowThree;
+  @FXML private ImageView lowFour;
+  @FXML private ImageView lowFive;
+  @FXML private ImageView lowSix;
+  @FXML private ImageView lowSeven;
+  @FXML private ImageView lowEight;
+
+  @FXML private ImageView transitionOne;
+  @FXML private ImageView transitionTwo;
+  @FXML private ImageView transitionThree;
+  @FXML private ImageView transitionFour;
+  @FXML private ImageView transitionFive;
+  @FXML private ImageView transitionSix;
+  @FXML private ImageView transitionSeven;
+
+  private ImageView lowImgs[];
+  private ImageView highImgs[];
+  private ImageView highLowImgs[];
+  private ImageView lowHighImgs[];
+  private ImageView transitionImgs[];
+
   //Instanciando a string que vai receber a opcao selecionada no choiceBox
   private String selectedMethod = "";
 
   //Instanciando o inteiro que vai ser utilizado no switch - case
   private int option;
+
+  private int lastSignal = 0; // the lastSignal sent by physical layer, 0 = low, 1 = high
 
   Binaria binarioControl = new Binaria();
   Manchester manchesterControl = new Manchester();
@@ -104,6 +152,33 @@ public class MainControl implements Initializable{
     //Adiciona listeners para as ChoiceBox
     optionsBox.setOnAction(event -> optionsList(event));
 
+    ImageView low[] = { lowOne, lowTwo, lowThree, lowFour, lowFive, lowSix, lowSeven, lowEight};
+    lowImgs = low;
+
+    ImageView high[] = { highOne, highTwo, highThree, highFour, highFive, highSix, highSeven, highEight};
+    highImgs = high;
+
+    ImageView highLow[] = { highLowOne, highLowTwo, highLowThree, highLowFour, highLowFive, 
+    highLowSix, highLowSeven, highLowEight};
+    highLowImgs = highLow;
+
+    ImageView lowHigh[] = { lowHighOne, lowHighTwo, lowHighThree, lowHighFour, lowHighFive, 
+    lowHighSix, lowHighSeven, lowHighEight};
+    lowHighImgs = lowHigh;
+
+    ImageView transition[] = { transitionOne, transitionTwo, transitionThree, transitionFour,
+    transitionFive, transitionSix, transitionSeven};
+    transitionImgs = transition;
+
+    for (int i = 0; i < 8; i++) {
+      lowImgs[i].setVisible(false);
+      highImgs[i].setVisible(false);
+      highLowImgs[i].setVisible(false);
+      lowHighImgs[i].setVisible(false);
+    }
+    for (int i = 0; i < 7; i++) {
+      transitionImgs[i].setVisible(false);
+    }
   }
 
   /* ***************************************************************
@@ -120,9 +195,18 @@ public class MainControl implements Initializable{
 
   void CamadaDeAplicacaoTransmissora(String mensagemDigitada) {
     char[] chars = mensagemDigitada.toCharArray();
-    int[] quadro = new int[chars.length * 8];
+    int[] quadro;
     String[] binary = new String[chars.length];
     int ascii;
+
+    if(chars.length % 4 == 0){
+      quadro = new int[chars.length / 4];
+    } else {
+      quadro = new int[(chars.length / 4) +1];
+    }
+
+    int indexBit = 0;
+    String binaryTotal = "";
 
     //forma de atualizar os valores de ascii e binario no textArea de forma gradual
     ScheduledExecutorService executor = Executors.newScheduledThreadPool(1);
@@ -133,7 +217,7 @@ public class MainControl implements Initializable{
       ascii = valorASCII;
 
       String binaryBuilder = "";
-      // Convertendo ASCII p binário
+      // Convertendo ASCII p binario
       for (int j = 0; j < 7; j++) {
         binaryBuilder = String.valueOf(valorASCII % 2) + binaryBuilder;
         valorASCII /= 2;
@@ -144,14 +228,18 @@ public class MainControl implements Initializable{
       }
 
       binary[i] = binaryBuilder.toString();
+      binaryTotal += binaryBuilder;
 
-      //preenchendo o quadro com os bits do binario
-      //aqui ocorre a conversao da mensagem enviada para uma sequencia de bits(quadro)
-      for (int k = 0; k < 8; k++) {//percorre cada um dos 8 bits
-        quadro[i * 8 + k] = Integer.parseInt(binary[i].substring(k, k + 1)); //atribui cada digito binario ao array quadro
+      for (int j = 0; j < 8; j++){
+        int positionBit = binaryBuilder.charAt(j) == '0' ? 0 : 1;
+        quadro[indexBit] = (quadro[indexBit] << 1) | positionBit;
       }
-
+  
+      if (i % 4 == 3){
+        indexBit++;
+      }
       String asciiValue = String.valueOf(ascii);
+
       final int currentIndex = i;
       //abaixo um executor apenas para que a impressao dos valores de ascii e dos bits sejam feita de forma gradual no textArea
       executor.schedule(() -> {
@@ -162,17 +250,13 @@ public class MainControl implements Initializable{
           asciiText.appendText("[" + showASCII + "] = " + asciiValue + "\n");
           bitsText.appendText("[" + showASCII + "] = " + showBits + "\n");
         });
-      }, i * 1000, TimeUnit.MILLISECONDS);
-
-      System.out.println("Caractere: " + chars[i]);
-      System.out.println("Valor ASCII: " + ascii);
-      System.out.println("Valor binário: " + binary[i]);
+      }, i * 500, TimeUnit.MILLISECONDS);
     }
-
+    System.out.println("Valor binário TOTAL: " + binaryTotal);
     //fechando o executor apos processamento
     executor.schedule(() -> {
-        executor.shutdown();
-        CamadaFisicaTransmissora(quadro);
+      executor.shutdown();
+      CamadaFisicaTransmissora(quadro);
     }, chars.length * 50, TimeUnit.MILLISECONDS);
 
     CamadaFisicaTransmissora(quadro);
@@ -195,18 +279,37 @@ public class MainControl implements Initializable{
     MeioDeComunicacao(fluxoBrutoDeBits);
   }//fim do metodo CamadaFisicaTransmissora
 
-  void MeioDeComunicacao (int fluxoBrutoDeBits []) {
+  void MeioDeComunicacao(int fluxoBrutoDeBits[]) {
     int[] fluxoBrutoDeBitsPontoA, fluxoBrutoDeBitsPontoB;
     fluxoBrutoDeBitsPontoA = fluxoBrutoDeBits;
-    fluxoBrutoDeBitsPontoB = new int [fluxoBrutoDeBitsPontoA.length];
-    int indexDoFluxoDeBits = 0;
-    while (indexDoFluxoDeBits < fluxoBrutoDeBitsPontoA.length){
-      fluxoBrutoDeBitsPontoB[indexDoFluxoDeBits] += fluxoBrutoDeBitsPontoA[indexDoFluxoDeBits];
-      indexDoFluxoDeBits++;
-    }
+    fluxoBrutoDeBitsPontoB = new int[fluxoBrutoDeBitsPontoA.length];
 
-    CamadaFisicaReceptora(fluxoBrutoDeBitsPontoB);
-  }//fim do metodo MeioDeTransmissao
+    new Thread(() -> {
+      int indexDoFluxoDeBits = 0;
+
+      for (int i = 0; i < fluxoBrutoDeBits.length; i++) {
+        int size = fluxoBrutoDeBits.length;
+        int valor = fluxoBrutoDeBits[i];
+        for (int j = 0; j < 8; j++) {
+          int bitAtual = ((valor >> j) & 1);
+          System.out.println("bit atual: " + bitAtual);
+          refresh();
+          giveSignal(bitAtual, j);
+
+          try {
+            Thread.sleep(500);
+          } catch (InterruptedException e) {
+            e.printStackTrace();
+          }
+        }
+      }
+      while (indexDoFluxoDeBits < fluxoBrutoDeBitsPontoA.length) {
+        fluxoBrutoDeBitsPontoB[indexDoFluxoDeBits] += fluxoBrutoDeBitsPontoA[indexDoFluxoDeBits];
+        indexDoFluxoDeBits++;
+      }
+        CamadaFisicaReceptora(fluxoBrutoDeBitsPontoB);
+    }).start();
+}  
 
   void CamadaFisicaReceptora (int quadro[]) {
     int tipoDeDecodificacao = getCodificacao();  
@@ -226,22 +329,35 @@ public class MainControl implements Initializable{
     CamadaDeAplicacaoReceptora(fluxoBrutoDeBits);
   }//fim do metodo CamadaFisicaTransmissora
 
-  void CamadaDeAplicacaoReceptora (int quadro []) {
-    String mensagem = "";
-    String letra = "";
-    int contador = 0;
-    
-    for (int i = 0; i < quadro.length; i++){
-      letra += quadro[i];
-      if (contador == 7) {
-        mensagem += (char) binaryToDecimal(letra);
-        letra = "";
-        contador = -1;
+  void CamadaDeAplicacaoReceptora(int quadro[]) {
+    StringBuilder mensagemBuilder = new StringBuilder();
+
+    for (int i = 0; i < quadro.length; i++) {
+      int intBits = quadro[i];
+      String binaryString = intBinary(intBits);
+        
+      //dividindo o grupo binario em sub grupos de 8 bits e convertendo para ASCII
+      for (int j = 0; j < binaryString.length(); j += 8) {
+        String binaryByte = binaryString.substring(j, j + 8);
+        int asciiValue = binaryDecimal(binaryByte);
+        mensagemBuilder.append((char) asciiValue);
       }
-      contador ++;
-      AplicacaoReceptora(mensagem);
     }
-  }//fim do metodo CamadaDeAplicacaoReceptora
+
+    String mensagem = mensagemBuilder.toString();
+    AplicacaoReceptora(mensagem);
+  }
+
+  //Função para converter um inteiro em uma representação binária com 32 bits
+  String intBinary(int value) {
+    StringBuilder binaryBuilder = new StringBuilder();
+    
+    for (int i = 31; i >= 0; i--) {
+      int bit = (value >> i) & 1;
+      binaryBuilder.append(bit);
+    }
+    return binaryBuilder.toString();
+  }
 
   void AplicacaoReceptora (String mensagem) {
     Platform.runLater(() -> {
@@ -257,7 +373,7 @@ public class MainControl implements Initializable{
   * Parametros: String numero (fluxoDeBits)
   * Retorno: int valorDecimal (valor convertido de binario para decimal)
   *************************************************************** */
-  public static int binaryToDecimal(String number) {
+  public static int binaryDecimal(String number) {
     int valorDecimal = 0;
     int base = 1;
     
@@ -272,6 +388,32 @@ public class MainControl implements Initializable{
     }
     return valorDecimal;
   }//fim do metodo binaryToDecimal
+
+  public void refresh() {
+      Platform.runLater(() -> {
+          for (int i = 7; i >= 1; i--) {
+            lowImgs[i].setVisible(lowImgs[i-1].isVisible());
+            highImgs[i].setVisible(highImgs[i-1].isVisible());
+            //midImgs[i].setVisible(midImgs[i - 1].isVisible());
+          }
+      });
+  }
+  
+  public void giveSignal(int bit, int i) {
+    Platform.runLater(() -> {
+      if (bit == 0){
+        lowImgs[0].setVisible(true);
+      }
+      else{
+        highImgs[0].setVisible(true);
+      }
+      
+      if (bit != lastSignal) {
+        transitionImgs[0].setVisible(true);
+      }
+      lastSignal = bit;
+    });
+  }
 
   @FXML 
   void enviarMensagem(ActionEvent event) {

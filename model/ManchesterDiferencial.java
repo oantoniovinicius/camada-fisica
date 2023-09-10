@@ -1,75 +1,53 @@
 package model;
 
 public class ManchesterDiferencial {
-  /* ***************************************************************
-* Metodo: CamadaFisicaTransmissoraCodificacaoManchesterDiferencial
-* Funcao: Codificar o fluxo de bits em manchester diferencial
-* Parametros: int[] quadro = fluxoDeBits
-* Retorno: int = fluxoDeBits em manchester diferencial
-*************************************************************** */
-public int[] CamadaFisicaTransmissoraCodificacaoManchesterDiferencial (int quadro[]){
-    //graphicHBox.
-    int[] codificacaoManchesterDiferencial = new int[quadro.length * 2];
-    for (int i = 0, j = 0; i < quadro.length; i++) {
-      // Caso inicial, baixo-alto
-      if (i == 0) {
-        if (quadro[i] == 0) {
-          codificacaoManchesterDiferencial[j] = 0;
-          codificacaoManchesterDiferencial[j + 1] = 1;
-          //show(codificacaoManchesterDiferencial, graphicHBox);
-        } else {
-          codificacaoManchesterDiferencial[j] = 1;
-          codificacaoManchesterDiferencial[j + 1] = 0;
-          //show(codificacaoManchesterDiferencial, graphicHBox);
+  public int[] CamadaFisicaTransmissoraCodificacaoManchesterDiferencial(int[] quadro) {
+    int[] manchesterDiferentialSignal = new int[quadro.length * 2];
+    int deslocIndex = 0;  
+    int bitDesloc = 0;
+    int lastTransition = 0;  //armazena o ultimo valor da transicao (0 ou 1).
+    
+    for (int valor : quadro) {
+      for (int k = 0; k < 32; k++) {
+        if (bitDesloc == 32) {
+          deslocIndex++;
+          bitDesloc = 0;
         }
-      } else {
-        if (quadro[i] == quadro[i - 1]) {
-          codificacaoManchesterDiferencial[j] = codificacaoManchesterDiferencial[j - 1];
-          codificacaoManchesterDiferencial[j + 1] = codificacaoManchesterDiferencial[j - 2];
-          //show(codificacaoManchesterDiferencial, graphicHBox);
-        } else {
-          codificacaoManchesterDiferencial[j] = codificacaoManchesterDiferencial[j - 2];
-          codificacaoManchesterDiferencial[j + 1] = codificacaoManchesterDiferencial[j - 1];
-        } 
+        //realiza a codificacao
+        manchesterDiferentialSignal[deslocIndex] |= (((((valor >> k) & 1) == 0) ? 0 : 1) ^ lastTransition) << bitDesloc;
+    
+        lastTransition = (((valor >> k) & 1) == 0) ? 0 : 1;  //atualiza o ultimo valor da transicao.
+        bitDesloc += 2;
       }
-      j += 2;
-    }//Fim do for
-    System.out.print("\nManchesterDiferencial: ");
-    for (int z = 0; z<codificacaoManchesterDiferencial.length;z++){
-      System.out.print(codificacaoManchesterDiferencial[z]);
     }
-    return codificacaoManchesterDiferencial;
-  }//fim do CamadaFisicaTransmissoraCodificacaoManchesterDiferencial
+    System.out.println("diferencial: " + Integer.toBinaryString(manchesterDiferentialSignal[0]));
 
-  /* ***************************************************************
-* Metodo: CamadaFisicaReceptoraDecodificacaoManchesterDiferencial
-* Funcao: Decodificar o fluxoDeBits que se encontra em manchester diferencial
-* Parametros: int[] quadro = fluxoDeManchesterDiferencial
-* Retorno: int = fluxoDeBits em bits
-*************************************************************** */
-public int[] CamadaFisicaReceptoraDecodificacaoManchesterDiferencial(int quadro[]){
-    int[] decodificacaoManchesterDiferencial = new int[quadro.length / 2];
-    for (int i = 0, j = 0; i < quadro.length; i += 2) {
-      if (i == 0) {
-        if (quadro[i] == 0 && quadro[i + 1] == 1) {
-          decodificacaoManchesterDiferencial[0] = 0;
+    return manchesterDiferentialSignal;
+  }
+    
+  public int[] CamadaFisicaReceptoraDecodificacaoManchesterDiferencial(int[] quadroManchesterDiferential) {
+    int[] finalDecod = new int[quadroManchesterDiferential.length / 2];
+    int decodPosition = 0; // indice para quadroDecodificado
+    int deslocBit = 0; // inicialize o bit anterior como 0
+    int lastTransition = 0;  //armazena o ultimo valor da transicao (0 ou 1).
+    
+    for (int bitsIndex = 0; bitsIndex < finalDecod.length; bitsIndex++) {
+      for (int k = 0; k < 64; k += 2) {
+        int valor = quadroManchesterDiferential[decodPosition];
+
+        if (k>31){
+          valor = quadroManchesterDiferential[decodPosition + 1];
         }
-        if (quadro[i] == 1 && quadro[i + 1] == 0) {
-          decodificacaoManchesterDiferencial[0] = 1;
+        if(deslocBit == 32){
+          deslocBit = 0;
         }
-      } else {
-        if (quadro[i] == quadro[i - 1]) {
-          decodificacaoManchesterDiferencial[j] = decodificacaoManchesterDiferencial[j - 1];
-        } else {
-          if (decodificacaoManchesterDiferencial[j - 1] == 1) {
-            decodificacaoManchesterDiferencial[j] = 0;
-          } else {
-            decodificacaoManchesterDiferencial[j] = 1;
-          }
-        }
+
+        finalDecod[bitsIndex] |= ((((valor >> k) & 1) ^ lastTransition) << deslocBit);
+        lastTransition = ((valor >> k) & 1) ^ lastTransition;  
+        deslocBit++;
       }
-      j++;
+        decodPosition += 2;
     }
-  return decodificacaoManchesterDiferencial;
-  }//fim do CamadaFisicaReceptoraDecodificacaoManchesterDiferencial
+    return finalDecod;
+  }
 }
