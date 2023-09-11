@@ -95,8 +95,9 @@ public class MainControl implements Initializable{
 
   //Instanciando o inteiro que vai ser utilizado no switch - case
   private int option;
-
-  private int lastSignal = 0; //0 = low, 1 = high
+  private int lastBit = 0; 
+  private int currentBit = 0;
+  private int sizeMessage = 0;
 
   Binaria binarioControl = new Binaria();
   Manchester manchesterControl = new Manchester();
@@ -196,22 +197,17 @@ public class MainControl implements Initializable{
 
   void CamadaDeAplicacaoTransmissora(String mensagemDigitada) {
     char[] chars = mensagemDigitada.toCharArray();
+    sizeMessage = chars.length;
     int[] quadro;
     String[] binary = new String[chars.length];
     int ascii;
+    int indexBit = 0;
 
     if(chars.length % 4 == 0){
       quadro = new int[chars.length / 4];
     } else {
       quadro = new int[(chars.length / 4) +1];
     }
-
-    int indexBit = 0;
-    String binaryTotal = "";
-
-    //forma de atualizar os valores de ascii e binario no textArea de forma gradual
-    ScheduledExecutorService executor = Executors.newScheduledThreadPool(1);
-
     // Convertendo caracteres de acordo com a tabela ASCII
     for (int i = 0; i < chars.length; i++) {
       int valorASCII = chars[i];
@@ -229,7 +225,6 @@ public class MainControl implements Initializable{
       }
 
       binary[i] = binaryBuilder.toString();
-      binaryTotal += binaryBuilder;
 
       for (int j = 0; j < 8; j++){
         int positionBit = binaryBuilder.charAt(j) == '0' ? 0 : 1;
@@ -239,27 +234,18 @@ public class MainControl implements Initializable{
       if (i % 4 == 3){
         indexBit++;
       }
+
       String asciiValue = String.valueOf(ascii);
 
       final int currentIndex = i;
-      //abaixo um executor apenas para que a impressao dos valores de ascii e dos bits sejam feita de forma gradual no textArea
-      executor.schedule(() -> {
-        String showASCII = String.valueOf(chars[currentIndex]);
-        String showBits = String.valueOf(binary[currentIndex]);
+      String showASCII = String.valueOf(chars[currentIndex]);
+      String showBits = String.valueOf(binary[currentIndex]);
             
-        Platform.runLater(() -> {
-          asciiText.appendText("[" + showASCII + "] = " + asciiValue + "\n");
-          bitsText.appendText("[" + showASCII + "] = " + showBits + "\n");
-        });
-      }, i * 500, TimeUnit.MILLISECONDS);
+      Platform.runLater(() -> {
+        asciiText.appendText("[" + showASCII + "] = " + asciiValue + "\n");
+        bitsText.appendText("[" + showASCII + "] = " + showBits + "\n");
+      });
     }
-    System.out.println("Valor binário TOTAL: " + binaryTotal);
-    //fechando o executor apos processamento
-    executor.schedule(() -> {
-      executor.shutdown();
-      CamadaFisicaTransmissora(quadro);
-    }, chars.length * 50, TimeUnit.MILLISECONDS);
-
     CamadaFisicaTransmissora(quadro);
   }
 
@@ -287,22 +273,27 @@ public class MainControl implements Initializable{
 
     new Thread(() -> {
       int indexDoFluxoDeBits = 0;
-      for (int i = 0; i < fluxoBrutoDeBits.length; i++) {
-        int valor = fluxoBrutoDeBits[i];
-        System.out.println("ETAPA 1: " + Integer.toBinaryString(valor));
-        System.out.println("lenght: " + fluxoBrutoDeBits.length);
+      int tradeBits = 0;
+      int indexArray = 0;
+      for (int i = 0; i < sizeMessage; i++) {
+        if(i % 4 == 0 && i != 0){
+          indexArray++;
+        }
         for (int j = 0; j < 8; j++) {
-          int bitAtual = (valor >> j) & 1;
-          System.out.println("bitAtual: " + bitAtual);
+          int mask = 1 << tradeBits;
+          currentBit = (fluxoBrutoDeBits[indexArray] & mask) >> tradeBits;
+          int nextBit = (fluxoBrutoDeBits[indexArray] & 1);
 
           refresh();
-          giveSignal(bitAtual, j);
+          giveSignal(currentBit, nextBit);
 
           try {
             Thread.sleep(500);
           } catch (InterruptedException e) {
             e.printStackTrace();
           }
+
+          tradeBits ++;
         }
       }
       while (indexDoFluxoDeBits < fluxoBrutoDeBitsPontoA.length) {
@@ -394,33 +385,48 @@ public class MainControl implements Initializable{
   public void refresh() {
     Platform.runLater(() -> {
       if(getCodificacao() == 0){
-        for (int i = 7; i >= 0; i--) {
-          lowImgs[i].setVisible(lowImgs[i].isVisible());
-          highImgs[i].setVisible(highImgs[i].isVisible());
-          transitionImgs[i].setVisible(transitionImgs[i].isVisible());
+        for (int i = 7; i >= 1; i--) {
+          lowImgs[i].setVisible(lowImgs[i-1].isVisible());
+          highImgs[i].setVisible(highImgs[i-1].isVisible());
+          transitionImgs[i].setVisible(transitionImgs[i-1].isVisible());
         }
       } else {
-        for (int i = 7; i >= 0; i--) {
-          lowHighImgs[i].setVisible(lowHighImgs[i].isVisible());
-          highLowImgs[i].setVisible(highLowImgs[i].isVisible());
+        for (int i = 7; i >= 1; i--) {
+          lowHighImgs[i].setVisible(lowHighImgs[i-1].isVisible());
+          highLowImgs[i].setVisible(highLowImgs[i-1].isVisible());
         }
       }
     });
   }
   
-  public void giveSignal(int bit, int i) {
+  public void giveSignal(int currentBit, int nextBit) {
     Platform.runLater(() -> {
-      if (bit == 0){
-        lowImgs[i].setVisible(true);
-      }
-      else{
-        highImgs[i].setVisible(true);
+      lowImgs[0].setVisible(false);
+      transitionImgs[0].setVisible(false);
+      highImgs[0].setVisible(false);
+      lowHighImgs[0].setVisible(false);
+      highLowImgs[0].setVisible(false);
+
+      if(getCodificacao() == 0){
+        if (currentBit == 0){
+          lowImgs[0].setVisible(true);
+        }
+        else{
+          highImgs[0].setVisible(true);
+        }
+      
+        if (currentBit != lastBit) {
+          transitionImgs[0].setVisible(true);
+        }
+        lastBit = currentBit;
+      } else {
+        if(currentBit == 0 && nextBit == 1){
+          lowHighImgs[0].setVisible(true);
+        } else {
+          highLowImgs[0].setVisible(true);
+        }
       }
       
-      if (bit != lastSignal) {
-        transitionImgs[i].setVisible(true);
-      }
-      lastSignal = bit;
     });
   }
 
