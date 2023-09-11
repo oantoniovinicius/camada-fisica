@@ -82,6 +82,7 @@ public class MainControl implements Initializable{
   @FXML private ImageView transitionFive;
   @FXML private ImageView transitionSix;
   @FXML private ImageView transitionSeven;
+  @FXML private ImageView transitionEight;
 
   private ImageView lowImgs[];
   private ImageView highImgs[];
@@ -95,7 +96,7 @@ public class MainControl implements Initializable{
   //Instanciando o inteiro que vai ser utilizado no switch - case
   private int option;
 
-  private int lastSignal = 0; // the lastSignal sent by physical layer, 0 = low, 1 = high
+  private int lastSignal = 0; //0 = low, 1 = high
 
   Binaria binarioControl = new Binaria();
   Manchester manchesterControl = new Manchester();
@@ -167,7 +168,7 @@ public class MainControl implements Initializable{
     lowHighImgs = lowHigh;
 
     ImageView transition[] = { transitionOne, transitionTwo, transitionThree, transitionFour,
-    transitionFive, transitionSix, transitionSeven};
+    transitionFive, transitionSix, transitionSeven, transitionEight};
     transitionImgs = transition;
 
     for (int i = 0; i < 8; i++) {
@@ -266,8 +267,8 @@ public class MainControl implements Initializable{
     int tipoDeCodificacao = getCodificacao(); 
     int fluxoBrutoDeBits [] = quadro; 
     switch (tipoDeCodificacao) {
-      case 0 : //codificao binaria
-        fluxoBrutoDeBits = binarioControl.CamadaFisicaTransmissoraCodificacaoBinaria(quadro);
+    case 0 : //codificao binaria
+      fluxoBrutoDeBits = binarioControl.CamadaFisicaTransmissoraCodificacaoBinaria(quadro);
       break;
     case 1 : //codificacao manchester
       fluxoBrutoDeBits = manchesterControl.CamadaFisicaTransmissoraCodificacaoManchester(quadro);
@@ -286,13 +287,14 @@ public class MainControl implements Initializable{
 
     new Thread(() -> {
       int indexDoFluxoDeBits = 0;
-
       for (int i = 0; i < fluxoBrutoDeBits.length; i++) {
-        int size = fluxoBrutoDeBits.length;
         int valor = fluxoBrutoDeBits[i];
+        System.out.println("ETAPA 1: " + Integer.toBinaryString(valor));
+        System.out.println("lenght: " + fluxoBrutoDeBits.length);
         for (int j = 0; j < 8; j++) {
-          int bitAtual = ((valor >> j) & 1);
-          System.out.println("bit atual: " + bitAtual);
+          int bitAtual = (valor >> j) & 1;
+          System.out.println("bitAtual: " + bitAtual);
+
           refresh();
           giveSignal(bitAtual, j);
 
@@ -307,9 +309,9 @@ public class MainControl implements Initializable{
         fluxoBrutoDeBitsPontoB[indexDoFluxoDeBits] += fluxoBrutoDeBitsPontoA[indexDoFluxoDeBits];
         indexDoFluxoDeBits++;
       }
-        CamadaFisicaReceptora(fluxoBrutoDeBitsPontoB);
+      CamadaFisicaReceptora(fluxoBrutoDeBitsPontoB);
     }).start();
-}  
+  }  
 
   void CamadaFisicaReceptora (int quadro[]) {
     int tipoDeDecodificacao = getCodificacao();  
@@ -390,26 +392,33 @@ public class MainControl implements Initializable{
   }//fim do metodo binaryToDecimal
 
   public void refresh() {
-      Platform.runLater(() -> {
-          for (int i = 7; i >= 1; i--) {
-            lowImgs[i].setVisible(lowImgs[i-1].isVisible());
-            highImgs[i].setVisible(highImgs[i-1].isVisible());
-            //midImgs[i].setVisible(midImgs[i - 1].isVisible());
-          }
-      });
+    Platform.runLater(() -> {
+      if(getCodificacao() == 0){
+        for (int i = 7; i >= 0; i--) {
+          lowImgs[i].setVisible(lowImgs[i].isVisible());
+          highImgs[i].setVisible(highImgs[i].isVisible());
+          transitionImgs[i].setVisible(transitionImgs[i].isVisible());
+        }
+      } else {
+        for (int i = 7; i >= 0; i--) {
+          lowHighImgs[i].setVisible(lowHighImgs[i].isVisible());
+          highLowImgs[i].setVisible(highLowImgs[i].isVisible());
+        }
+      }
+    });
   }
   
   public void giveSignal(int bit, int i) {
     Platform.runLater(() -> {
       if (bit == 0){
-        lowImgs[0].setVisible(true);
+        lowImgs[i].setVisible(true);
       }
       else{
-        highImgs[0].setVisible(true);
+        highImgs[i].setVisible(true);
       }
       
       if (bit != lastSignal) {
-        transitionImgs[0].setVisible(true);
+        transitionImgs[i].setVisible(true);
       }
       lastSignal = bit;
     });

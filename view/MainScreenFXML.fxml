@@ -292,6 +292,7 @@
                   <Image url="@../img/low-high.png" />
                </image>
             </ImageView>
+            <ImageView fx:id="transitionEight" fitHeight="150.0" fitWidth="200.0" pickOnBounds="true" preserveRatio="true" />
          </children>
       </Group>
    </children>
