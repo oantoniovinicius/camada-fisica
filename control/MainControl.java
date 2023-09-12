@@ -280,15 +280,15 @@ public class MainControl implements Initializable{
           indexArray++;
         }
         for (int j = 0; j < 8; j++) {
-          int mask = 1 << tradeBits;
-          currentBit = (fluxoBrutoDeBits[indexArray] & mask) >> tradeBits;
-          int nextBit = (fluxoBrutoDeBits[indexArray] & 1);
+          int mask = 1 << tradeBits; //pega 1 bit
 
-          refresh();
-          giveSignal(currentBit, nextBit);
+            currentBit = (fluxoBrutoDeBits[indexArray] & mask) >> tradeBits;
+
+            refresh();
+            giveSignal(currentBit);
 
           try {
-            Thread.sleep(500);
+            Thread.sleep(100);
           } catch (InterruptedException e) {
             e.printStackTrace();
           }
@@ -384,22 +384,22 @@ public class MainControl implements Initializable{
 
   public void refresh() {
     Platform.runLater(() -> {
-      if(getCodificacao() == 0){
+      //if(getCodificacao() == 0){
         for (int i = 7; i >= 1; i--) {
           lowImgs[i].setVisible(lowImgs[i-1].isVisible());
           highImgs[i].setVisible(highImgs[i-1].isVisible());
           transitionImgs[i].setVisible(transitionImgs[i-1].isVisible());
         }
-      } else {
+      /* } else {
         for (int i = 7; i >= 1; i--) {
           lowHighImgs[i].setVisible(lowHighImgs[i-1].isVisible());
           highLowImgs[i].setVisible(highLowImgs[i-1].isVisible());
         }
-      }
+      }*/
     });
   }
   
-  public void giveSignal(int currentBit, int nextBit) {
+  public void giveSignal(int bits) {
     Platform.runLater(() -> {
       lowImgs[0].setVisible(false);
       transitionImgs[0].setVisible(false);
@@ -407,25 +407,30 @@ public class MainControl implements Initializable{
       lowHighImgs[0].setVisible(false);
       highLowImgs[0].setVisible(false);
 
-      if(getCodificacao() == 0){
-        if (currentBit == 0){
+      //if(getCodificacao() == 0){
+        if (bits == 0){
           lowImgs[0].setVisible(true);
         }
         else{
           highImgs[0].setVisible(true);
         }
       
-        if (currentBit != lastBit) {
+        if (bits != lastBit) {
           transitionImgs[0].setVisible(true);
         }
         lastBit = currentBit;
-      } else {
-        if(currentBit == 0 && nextBit == 1){
-          lowHighImgs[0].setVisible(true);
+      //} else {
+        /*if(bits == 0){
+          lowImgs[0].setVisible(true);
         } else {
-          highLowImgs[0].setVisible(true);
+          highImgs[0].setVisible(true);
         }
-      }
+
+        if (bits != lastBit) {
+          transitionImgs[0].setVisible(true);
+        }
+        lastBit = currentBit;*/
+      //}
       
     });
   }
