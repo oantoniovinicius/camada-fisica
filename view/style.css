@@ -53,3 +53,15 @@
     -fx-border-width: 4px;
     -fx-border-color: rgb(0, 0, 0);
 }
+
+#backButton{
+    -fx-background-color: rgb(0, 0, 0);
+    -fx-font: 12pt "Arial";
+    -fx-font-weight: bold;
+    -fx-border-radius:50px;
+    -fx-border-width: 4px;
+    -fx-border-color: rgb(248, 68, 68);
+}
+#backButton:hover {
+    -fx-background-color:rgb(128, 128, 128);
+}

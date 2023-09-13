@@ -1,3 +1,11 @@
+/* ***************************************************************
+* Autor............: Antonio Vinicius Silva Dutra
+* Matricula........: 202110810
+* Inicio...........: 04/09/2023
+* Ultima alteracao.: 12/09/2023
+* Nome.............: Principal.java
+* Funcao...........: Inicia a GUI do programa pelo metodo start()
+*************************************************************** */
 package model;
 
 public class ManchesterDiferencial {
@@ -20,7 +28,6 @@ public class ManchesterDiferencial {
         bitDesloc += 2;
       }
     }
-    System.out.println("diferencial: " + Integer.toBinaryString(manchesterDiferentialSignal[0]));
 
     return manchesterDiferentialSignal;
   }

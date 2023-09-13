@@ -1,8 +1,8 @@
 /* ***************************************************************
 * Autor............: Antonio Vinicius Silva Dutra
 * Matricula........: 202110810
-* Inicio...........: 06/05/2023
-* Ultima alteracao.: 10/05/2023
+* Inicio...........: 04/09/2023
+* Ultima alteracao.: 12/09/2023
 * Nome.............: Principal.java
 * Funcao...........: Inicia a GUI do programa pelo metodo start()
 *************************************************************** */
@@ -31,7 +31,7 @@ public class Principal extends Application{
   ****************************************************************** */
   @Override
   public void start(Stage primaryStage) throws Exception {  
-    primaryStage.setTitle("SPACEZAP");
+    primaryStage.setTitle("CAMADA FÍSICA");
     Parent loader = FXMLLoader.load((getClass().getResource("./view/MainScreenFXML.fxml")));
     //primaryStage.getIcons().add(new Image(getClass().getResourceAsStream("./resources/icon.png")));
     Scene scene = new Scene(loader);  

@@ -1,9 +1,6 @@
 package control;
 import java.net.URL;
 import java.util.ResourceBundle;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -20,18 +17,22 @@ import javafx.scene.input.MouseEvent;
 import model.*;
 
 public class MainControl implements Initializable{
-
+  //botoes da aplicacao
   @FXML private Button iniciar;
   @FXML private Button continueButton;
   @FXML private Button sendButton;
+  @FXML private Button backButton;
 
+  //choiceBox com as opcoes de codificacao
   @FXML private ChoiceBox<String> optionsBox;
 
+  //textAreas que vao aparecer na aplicacao
   @FXML private TextArea textArea;
   @FXML private TextArea asciiText;
   @FXML private TextArea bitsText;
   @FXML private TextArea output;
 
+  //alguns imageView da aplicacao (ovni, capsula, etc)
   @FXML private ImageView textLogo;
   @FXML private ImageView transmissor;
   @FXML private ImageView receptor;
@@ -39,15 +40,7 @@ public class MainControl implements Initializable{
   @FXML private ImageView dialogoEsquerdo;
   @FXML private ImageView signalRadio;
 
-  @FXML private ImageView highLowOne;
-  @FXML private ImageView highLowTwo;
-  @FXML private ImageView highLowThree;
-  @FXML private ImageView highLowFour;
-  @FXML private ImageView highLowFive;
-  @FXML private ImageView highLowSix;
-  @FXML private ImageView highLowSeven;
-  @FXML private ImageView highLowEight;
-
+  //ondas de bit = 1
   @FXML private ImageView highOne;
   @FXML private ImageView highTwo;
   @FXML private ImageView highThree;
@@ -57,15 +50,7 @@ public class MainControl implements Initializable{
   @FXML private ImageView highSeven;
   @FXML private ImageView highEight;
 
-  @FXML private ImageView lowHighOne;
-  @FXML private ImageView lowHighTwo;
-  @FXML private ImageView lowHighThree;
-  @FXML private ImageView lowHighFour;
-  @FXML private ImageView lowHighFive;
-  @FXML private ImageView lowHighSix;
-  @FXML private ImageView lowHighSeven;
-  @FXML private ImageView lowHighEight;
-
+  //ondas de bit = 0
   @FXML private ImageView lowOne;
   @FXML private ImageView lowTwo;
   @FXML private ImageView lowThree;
@@ -75,6 +60,7 @@ public class MainControl implements Initializable{
   @FXML private ImageView lowSeven;
   @FXML private ImageView lowEight;
 
+  //ondas para a transicao de bit para 0 ou para 1
   @FXML private ImageView transitionOne;
   @FXML private ImageView transitionTwo;
   @FXML private ImageView transitionThree;
@@ -84,10 +70,9 @@ public class MainControl implements Initializable{
   @FXML private ImageView transitionSeven;
   @FXML private ImageView transitionEight;
 
+  //array de imgs que vao guardar as formas de onda
   private ImageView lowImgs[];
   private ImageView highImgs[];
-  private ImageView highLowImgs[];
-  private ImageView lowHighImgs[];
   private ImageView transitionImgs[];
 
   //Instanciando a string que vai receber a opcao selecionada no choiceBox
@@ -97,12 +82,18 @@ public class MainControl implements Initializable{
   private int option;
   private int lastBit = 0; 
   private int currentBit = 0;
-  private int sizeMessage = 0;
 
+  //instanciando os controles das classes de codificacao e decodificacao
   Binaria binarioControl = new Binaria();
   Manchester manchesterControl = new Manchester();
   ManchesterDiferencial diferencialControl = new ManchesterDiferencial();
 
+  /********************************************************************
+  * Metodo: startButton()
+  * Funcao: inicio do programa em si. Apos clicar nesse botao, habilita as opcoes de codificacao
+  * Parametros: ActionEvent = event (clique do mouse)
+  * Retorno: void
+  ****************************************************************** */
   @FXML
   void startButton(ActionEvent event) {
     iniciar.setDisable(true);
@@ -114,8 +105,15 @@ public class MainControl implements Initializable{
     continueButton.setVisible(true);
     continueButton.setDisable(false);
     //textLogo.setVisible(false);
-  }
+  }//fim do metodo startButton()
 
+  /********************************************************************
+  * Metodo: initialize()
+  * Funcao: desativa alguns elementos graficos que serao utilizados de acordo com o clique
+  nos botoes
+  * Parametros: URL location, resources
+  * Retorno: void
+  ****************************************************************** */
   @Override
   public void initialize(URL location, ResourceBundle resources) {
     optionsBox.setVisible(false);
@@ -124,6 +122,8 @@ public class MainControl implements Initializable{
     continueButton.setDisable(true);
     sendButton.setVisible(false);
     sendButton.setDisable(true);
+    backButton.setVisible(false);
+    backButton.setDisable(true);
 
     receptor.setVisible(false);
     transmissor.setVisible(false);
@@ -143,15 +143,15 @@ public class MainControl implements Initializable{
     asciiText.setVisible(false);
 
     asciiText.setText("ASCII:\n\n");
-    bitsText.setText("Bits:\n\n");
+    bitsText.setText("Bits (binario):\n\n");
 
-    //Define as solucoes disponiveis na ChoiceBox de solucoes
+    //define as codificacoes disponiveis na ChoiceBox de solucoes
     ObservableList<String> methodOptions = FXCollections.observableArrayList("", "CODIFICACAO BINARIA", 
     "CODIFICACAO MANCHESTER", "CODIFICACAO MANCHESTER DIFERENCIAL");
     optionsBox.setItems(methodOptions);
     optionsBox.getSelectionModel().selectFirst();
 
-    //Adiciona listeners para as ChoiceBox
+    //adiciona listeners para as ChoiceBox
     optionsBox.setOnAction(event -> optionsList(event));
 
     ImageView low[] = { lowOne, lowTwo, lowThree, lowFour, lowFive, lowSix, lowSeven, lowEight};
@@ -160,28 +160,19 @@ public class MainControl implements Initializable{
     ImageView high[] = { highOne, highTwo, highThree, highFour, highFive, highSix, highSeven, highEight};
     highImgs = high;
 
-    ImageView highLow[] = { highLowOne, highLowTwo, highLowThree, highLowFour, highLowFive, 
-    highLowSix, highLowSeven, highLowEight};
-    highLowImgs = highLow;
-
-    ImageView lowHigh[] = { lowHighOne, lowHighTwo, lowHighThree, lowHighFour, lowHighFive, 
-    lowHighSix, lowHighSeven, lowHighEight};
-    lowHighImgs = lowHigh;
-
     ImageView transition[] = { transitionOne, transitionTwo, transitionThree, transitionFour,
     transitionFive, transitionSix, transitionSeven, transitionEight};
     transitionImgs = transition;
 
+    //desativando as imageView 
     for (int i = 0; i < 8; i++) {
       lowImgs[i].setVisible(false);
       highImgs[i].setVisible(false);
-      highLowImgs[i].setVisible(false);
-      lowHighImgs[i].setVisible(false);
     }
     for (int i = 0; i < 7; i++) {
       transitionImgs[i].setVisible(false);
     }
-  }
+  } //fim do metodo initialize()
 
   /* ***************************************************************
 * Metodo: AplicacaoTransmissora
@@ -195,9 +186,15 @@ public class MainControl implements Initializable{
     CamadaDeAplicacaoTransmissora (mensagemDigitada);
   }//Fim do metodo AplicacaoTransmissora
 
+  /* ***************************************************************
+  * Metodo: CamadaDeAplicacaoTransmissora
+  * Funcao: converte a mensagem digitada em ASCII e depois para binario.
+  Por fim atribui ao array quadro[], utilizando uma mascara, o valor dos binarios
+  * Parametros: String mensagemDigitada = mensagem digitada pelo usuario
+  * Retorno: void
+  *************************************************************** */
   void CamadaDeAplicacaoTransmissora(String mensagemDigitada) {
     char[] chars = mensagemDigitada.toCharArray();
-    sizeMessage = chars.length;
     int[] quadro;
     String[] binary = new String[chars.length];
     int ascii;
@@ -241,13 +238,11 @@ public class MainControl implements Initializable{
       String showASCII = String.valueOf(chars[currentIndex]);
       String showBits = String.valueOf(binary[currentIndex]);
             
-      Platform.runLater(() -> {
-        asciiText.appendText("[" + showASCII + "] = " + asciiValue + "\n");
-        bitsText.appendText("[" + showASCII + "] = " + showBits + "\n");
-      });
+      asciiText.appendText("[" + showASCII + "] = " + asciiValue + "\n");
+      bitsText.appendText("[" + showASCII + "] = " + showBits + "\n");
     }
     CamadaFisicaTransmissora(quadro);
-  }
+  }//fim do metodo CamadaDeAplicacaoTransmissora()
 
   void CamadaFisicaTransmissora (int quadro[]) {
     int tipoDeCodificacao = getCodificacao(); 
@@ -271,6 +266,9 @@ public class MainControl implements Initializable{
     fluxoBrutoDeBitsPontoA = fluxoBrutoDeBits;
     fluxoBrutoDeBitsPontoB = new int[fluxoBrutoDeBitsPontoA.length];
 
+    String mensagemDigitada = textArea.getText();
+    char[] chars = mensagemDigitada.toCharArray();
+    int sizeMessage = chars.length;
     new Thread(() -> {
       int indexDoFluxoDeBits = 0;
       int tradeBits = 0;
@@ -281,19 +279,18 @@ public class MainControl implements Initializable{
         }
         for (int j = 0; j < 8; j++) {
           int mask = 1 << tradeBits; //pega 1 bit
+          int value = fluxoBrutoDeBits[indexArray] & mask;
+          currentBit = value >> tradeBits;
 
-            currentBit = (fluxoBrutoDeBits[indexArray] & mask) >> tradeBits;
-
-            refresh();
-            giveSignal(currentBit);
+          moveWave();
+          activateWave(currentBit);
 
           try {
             Thread.sleep(100);
           } catch (InterruptedException e) {
             e.printStackTrace();
           }
-
-          tradeBits ++;
+          tradeBits++;
         }
       }
       while (indexDoFluxoDeBits < fluxoBrutoDeBitsPontoA.length) {
@@ -382,56 +379,33 @@ public class MainControl implements Initializable{
     return valorDecimal;
   }//fim do metodo binaryToDecimal
 
-  public void refresh() {
+  public void moveWave() {
     Platform.runLater(() -> {
-      //if(getCodificacao() == 0){
-        for (int i = 7; i >= 1; i--) {
-          lowImgs[i].setVisible(lowImgs[i-1].isVisible());
-          highImgs[i].setVisible(highImgs[i-1].isVisible());
-          transitionImgs[i].setVisible(transitionImgs[i-1].isVisible());
-        }
-      /* } else {
-        for (int i = 7; i >= 1; i--) {
-          lowHighImgs[i].setVisible(lowHighImgs[i-1].isVisible());
-          highLowImgs[i].setVisible(highLowImgs[i-1].isVisible());
-        }
-      }*/
+      for (int i = 7; i >= 1; i--) {
+        lowImgs[i].setVisible(lowImgs[i-1].isVisible());
+        highImgs[i].setVisible(highImgs[i-1].isVisible());
+        transitionImgs[i].setVisible(transitionImgs[i-1].isVisible());
+      }
     });
   }
-  
-  public void giveSignal(int bits) {
+
+  public void activateWave(int bits) {
     Platform.runLater(() -> {
       lowImgs[0].setVisible(false);
       transitionImgs[0].setVisible(false);
       highImgs[0].setVisible(false);
-      lowHighImgs[0].setVisible(false);
-      highLowImgs[0].setVisible(false);
 
-      //if(getCodificacao() == 0){
-        if (bits == 0){
-          lowImgs[0].setVisible(true);
-        }
-        else{
-          highImgs[0].setVisible(true);
-        }
+      if (bits == 0){
+        lowImgs[0].setVisible(true);
+      }
+      else{
+        highImgs[0].setVisible(true);
+      }
       
-        if (bits != lastBit) {
-          transitionImgs[0].setVisible(true);
-        }
-        lastBit = currentBit;
-      //} else {
-        /*if(bits == 0){
-          lowImgs[0].setVisible(true);
-        } else {
-          highImgs[0].setVisible(true);
-        }
-
-        if (bits != lastBit) {
-          transitionImgs[0].setVisible(true);
-        }
-        lastBit = currentBit;*/
-      //}
-      
+      if (bits != lastBit) {
+        transitionImgs[0].setVisible(true);
+      }
+      lastBit = currentBit;
     });
   }
 
@@ -449,6 +423,9 @@ public class MainControl implements Initializable{
       output.setVisible(true);
       bitsText.setVisible(true);
       asciiText.setVisible(true);
+
+      backButton.setVisible(true);
+      backButton.setDisable(false);
   
     } else {
       //Mostra uma mensagem de erro caso o usuario nao tenha selecionado um metodo de codificacao
@@ -457,6 +434,43 @@ public class MainControl implements Initializable{
       alert.setHeaderText("Texto vazio!");
       alert.setContentText("Por favor, envie uma mensagem.");
       alert.showAndWait();
+    }
+  }
+
+  @FXML
+  void voltar(ActionEvent event) {
+    asciiText.setVisible(false);
+    bitsText.setVisible(false);
+    asciiText.setText("ASCII:\n\n");
+    bitsText.setText("Bits(binario):\n\n");
+
+    optionsBox.setVisible(true);
+    optionsBox.setDisable(false);
+
+    continueButton.setVisible(true);
+    continueButton.setDisable(false);
+
+    backButton.setVisible(false);
+    backButton.setDisable(true);
+
+    signalRadio.setVisible(false);
+
+    textLogo.setVisible(true);
+    receptor.setVisible(false);
+    transmissor.setVisible(false);
+    dialogoDireito.setVisible(false);
+    dialogoEsquerdo.setVisible(false);
+    output.setVisible(false);
+    output.setText("");
+    textArea.setVisible(false);
+    textArea.setText("");
+
+    for (int i = 0; i < 8; i++) {
+      lowImgs[i].setVisible(false);
+      highImgs[i].setVisible(false);
+    }
+    for (int i = 0; i < 7; i++) {
+      transitionImgs[i].setVisible(false);
     }
   }
 
@@ -475,12 +489,14 @@ public class MainControl implements Initializable{
 
       dialogoEsquerdo.setVisible(true);
 
+      textArea.setEditable(true);
       textArea.setDisable(false);
       textArea.setVisible(true);
       textArea.setPromptText("FACA CONTATO COM A CAPSULA:");
 
       sendButton.setVisible(true);
       sendButton.setDisable(false);
+
     } else {
       //Mostra uma mensagem de erro caso o usuario nao tenha selecionado um metodo de codificacao
       Alert alert = new Alert(AlertType.ERROR);
