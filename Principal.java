@@ -31,9 +31,9 @@ public class Principal extends Application{
   ****************************************************************** */
   @Override
   public void start(Stage primaryStage) throws Exception {  
-    primaryStage.setTitle("CAMADA FÍSICA");
+    primaryStage.setTitle("CAMADA FISICA");
     Parent loader = FXMLLoader.load((getClass().getResource("./view/MainScreenFXML.fxml")));
-    //primaryStage.getIcons().add(new Image(getClass().getResourceAsStream("./resources/icon.png")));
+    primaryStage.getIcons().add(new Image(getClass().getResourceAsStream("./img/icon.png")));
     Scene scene = new Scene(loader);  
     
     primaryStage.setScene(scene);

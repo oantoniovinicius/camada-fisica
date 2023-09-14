@@ -1,3 +1,11 @@
+/* ***************************************************************
+* Autor............: Antonio Vinicius Silva Dutra
+* Matricula........: 202110810
+* Inicio...........: 04/09/2023
+* Ultima alteracao.: 12/09/2023
+* Nome.............: MainControl.java
+* Funcao...........: gerencia e controla a GUI do fxml, gerenciando os metodos principais da aplicacao
+*************************************************************** */
 package control;
 import java.net.URL;
 import java.util.ResourceBundle;
@@ -200,42 +208,47 @@ public class MainControl implements Initializable{
     int ascii;
     int indexBit = 0;
 
-    if(chars.length % 4 == 0){
-      quadro = new int[chars.length / 4];
+    //confere se eh multiplo de 4, pois sao 4 caracteres por posicao no array
+    //basicamente, abaixo eh calculado o tamanho que o array quadro tem que ter
+    //para alocar todos os caracteres e bits corretamente
+    if(chars.length % 4 == 0){ 
+      quadro = new int[chars.length / 4]; 
     } else {
       quadro = new int[(chars.length / 4) +1];
     }
-    // Convertendo caracteres de acordo com a tabela ASCII
+    //Convertendo caracteres de acordo com a tabela ASCII
     for (int i = 0; i < chars.length; i++) {
       int valorASCII = chars[i];
       ascii = valorASCII;
 
       String binaryBuilder = "";
-      // Convertendo ASCII p binario
-      for (int j = 0; j < 7; j++) {
+      // onvertendo ASCII p binario
+      for (int j = 0; j < 7; j++) { //executa 7 vezes representando cada um dos sete bits significativos do valor ASCII 
         binaryBuilder = String.valueOf(valorASCII % 2) + binaryBuilder;
         valorASCII /= 2;
       }
 
       while (binaryBuilder.length() < 8) {
-        binaryBuilder = "0" + binaryBuilder;
+        binaryBuilder = "0" + binaryBuilder; //garante que a representacao binaria tenha 8 bits no total
       }
 
       binary[i] = binaryBuilder.toString();
 
-      for (int j = 0; j < 8; j++){
-        int positionBit = binaryBuilder.charAt(j) == '0' ? 0 : 1;
-        quadro[indexBit] = (quadro[indexBit] << 1) | positionBit;
+      for (int j = 0; j < 8; j++){ //itera pelos 8 bits
+        int positionBit = binaryBuilder.charAt(j) == '0' ? 0 : 1;//verifica se o bit atual eh 0 ou 1 e armazena na variavel
+        //usando uma mascara de deslocamento para a esquerda, atribuimos os bits ao quadro
+        quadro[indexBit] = (quadro[indexBit] << 1) | positionBit; 
       }
   
-      if (i % 4 == 3){
+      if (i % 4 == 3){ //verifica se estamos no quarto caractere para mover para a proxima posicao do quadro
         indexBit++;
       }
 
       String asciiValue = String.valueOf(ascii);
 
+      //imprimindo os valores em seus respectivos textArea
       final int currentIndex = i;
-      String showASCII = String.valueOf(chars[currentIndex]);
+      String showASCII = String.valueOf(chars[currentIndex]); 
       String showBits = String.valueOf(binary[currentIndex]);
             
       asciiText.appendText("[" + showASCII + "] = " + asciiValue + "\n");
@@ -244,6 +257,13 @@ public class MainControl implements Initializable{
     CamadaFisicaTransmissora(quadro);
   }//fim do metodo CamadaDeAplicacaoTransmissora()
 
+    /* ***************************************************************
+  * Metodo: CamadaFisicaTransmissora
+  * Funcao: passa o quadro para uma variavel fluxoBrutoDeBits que vai ser codificada de acordo
+  com o metodo de codificacao escolhido pelo usuario na interface
+  * Parametros: int quadro[] = quadro com os bits
+  * Retorno: void
+  *************************************************************** */
   void CamadaFisicaTransmissora (int quadro[]) {
     int tipoDeCodificacao = getCodificacao(); 
     int fluxoBrutoDeBits [] = quadro; 
@@ -259,29 +279,40 @@ public class MainControl implements Initializable{
     break;
     }//fim do switch/case
     MeioDeComunicacao(fluxoBrutoDeBits);
-  }//fim do metodo CamadaFisicaTransmissora
+  }//fim do metodo CamadaFisicaTransmissora()
 
+  /* ***************************************************************
+  * Metodo: MeioDeComunicacao
+  * Funcao: transmite os bits da mensagem de um ponto A (transmissor) para um ponto B (receptor).
+  Alem disso, cuida da animacao do sinal na interface
+  * Parametros: int fluxoBrutoDeBits[] = fluxo de bits ja codificados
+  * Retorno: void
+  *************************************************************** */
   void MeioDeComunicacao(int fluxoBrutoDeBits[]) {
     int[] fluxoBrutoDeBitsPontoA, fluxoBrutoDeBitsPontoB;
     fluxoBrutoDeBitsPontoA = fluxoBrutoDeBits;
     fluxoBrutoDeBitsPontoB = new int[fluxoBrutoDeBitsPontoA.length];
 
-    String mensagemDigitada = textArea.getText();
+    String mensagemDigitada = textArea.getText(); 
     char[] chars = mensagemDigitada.toCharArray();
-    int sizeMessage = chars.length;
+    int sizeMessage = chars.length; //pegando o tamanho da mensagem para ser usado no for
     new Thread(() -> {
       int indexDoFluxoDeBits = 0;
       int tradeBits = 0;
       int indexArray = 0;
-      for (int i = 0; i < sizeMessage; i++) {
+      for (int i = 0; i < sizeMessage; i++) { //itera atraves dos caracteres da mensagem
+        //abaixo verifica se ja foram processados 4 caracteres
         if(i % 4 == 0 && i != 0){
-          indexArray++;
+          indexArray++; 
         }
-        for (int j = 0; j < 8; j++) {
+        for (int j = 0; j < 8; j++) { //8 bits por caractere
           int mask = 1 << tradeBits; //pega 1 bit
-          int value = fluxoBrutoDeBits[indexArray] & mask;
+          int value = fluxoBrutoDeBits[indexArray] & mask; //extraindo os bits indicados pela mascara
+          //abaixo, desloca os bits para que o bit de interesse (aquele definido pela máscara) 
+          //seja movido para a posição mais baixa (bit menos significativo) 
           currentBit = value >> tradeBits;
 
+          //metodos para ativar as imagens na interface, fazendo a passagem da onda em si
           moveWave();
           activateWave(currentBit);
 
@@ -299,56 +330,79 @@ public class MainControl implements Initializable{
       }
       CamadaFisicaReceptora(fluxoBrutoDeBitsPontoB);
     }).start();
-  }  
+  }//fim do metodo MeioDeComunicacao()
 
+  /* ***************************************************************
+  * Metodo: CamadaFisicaReceptora
+  * Funcao: chama os metodos de decodificacao de acordo com a opcao escolhida pelo usuario
+  * Parametros: int quadro[] = quadro com os bits
+  * Retorno: void
+  *************************************************************** */
   void CamadaFisicaReceptora (int quadro[]) {
     int tipoDeDecodificacao = getCodificacao();  
     int fluxoBrutoDeBits [] = quadro;
     switch (tipoDeDecodificacao) {
-    case 0 : //codificao binaria
+    case 0 : //decodificao binaria
       fluxoBrutoDeBits = binarioControl.CamadaFisicaReceptoraCodificacaoBinaria(quadro);
     break;
-    case 1 : //codificacao manchester
+    case 1 : //decodificacao manchester
       fluxoBrutoDeBits = manchesterControl.CamadaFisicaReceptoraDecodificacaoManchester(quadro);
     break;
-    case 2 : //codificacao manchester diferencial
+    case 2 : //decodificacao manchester diferencial
       fluxoBrutoDeBits = diferencialControl.CamadaFisicaReceptoraDecodificacaoManchesterDiferencial(quadro);
     break;
     }//fim do switch/case
 
     CamadaDeAplicacaoReceptora(fluxoBrutoDeBits);
-  }//fim do metodo CamadaFisicaTransmissora
+  }//fim do metodo CamadaFisicaTransmissora()
 
+  /* ***************************************************************
+  * Metodo: CamadaDeAplicacaoReceptora
+  * Funcao: chama metodos para converter o quadro com os bits de volta para a mensagem de texto
+  * Parametros: int quadro[] = quadro com os bits
+  * Retorno: void
+  *************************************************************** */
   void CamadaDeAplicacaoReceptora(int quadro[]) {
     StringBuilder mensagemBuilder = new StringBuilder();
 
     for (int i = 0; i < quadro.length; i++) {
-      int intBits = quadro[i];
-      String binaryString = intBinary(intBits);
+      int intBits = quadro[i]; //para cada elemento do array, extrai um valor inteiro
+      String binaryString = intBinary(intBits);//converte o inteiro em uma representacao de 32 bits e armazena numa string
         
       //dividindo o grupo binario em sub grupos de 8 bits e convertendo para ASCII
       for (int j = 0; j < binaryString.length(); j += 8) {
-        String binaryByte = binaryString.substring(j, j + 8);
-        int asciiValue = binaryDecimal(binaryByte);
-        mensagemBuilder.append((char) asciiValue);
+        String binaryByte = binaryString.substring(j, j + 8); //extrai 8 bits da representacao binaria
+        int asciiValue = binaryToDecimal(binaryByte);//converte o subgrupo em um valor ASCII
+        mensagemBuilder.append((char) asciiValue);//acrescentado ao stringbuilder como um caractere
       }
     }
 
     String mensagem = mensagemBuilder.toString();
     AplicacaoReceptora(mensagem);
-  }
+  }//fim do metodo CamadaDeAplicacaoReceptora()
 
-  //Função para converter um inteiro em uma representação binária com 32 bits
+  /* ***************************************************************
+  * Metodo: intBinary
+  * Funcao: converte um inteiro em uma representação binária com 32 bits
+  * Parametros: int value = inteiro de bits
+  * Retorno: void
+  *************************************************************** */
   String intBinary(int value) {
     StringBuilder binaryBuilder = new StringBuilder();
     
-    for (int i = 31; i >= 0; i--) {
-      int bit = (value >> i) & 1;
-      binaryBuilder.append(bit);
+    for (int i = 31; i >= 0; i--) {//comeca no bit mais significativo (31)
+      int bit = (value >> i) & 1;//desloca o bit de interesse para a posicao mais baixa(bit menos significativo) e extrai o bit
+      binaryBuilder.append(bit);//construcao da representacao binaria
     }
     return binaryBuilder.toString();
-  }
+  }//fim do metodo intBinary()
 
+  /* ***************************************************************
+  * Metodo: AplicacaoReceptora()
+  * Funcao: imprime a mensagem na interface
+  * Parametros: mensagem final convertida
+  * Retorno: void
+  *************************************************************** */
   void AplicacaoReceptora (String mensagem) {
     Platform.runLater(() -> {
       output.setText(mensagem);
@@ -363,7 +417,7 @@ public class MainControl implements Initializable{
   * Parametros: String numero (fluxoDeBits)
   * Retorno: int valorDecimal (valor convertido de binario para decimal)
   *************************************************************** */
-  public static int binaryDecimal(String number) {
+  public static int binaryToDecimal(String number) {
     int valorDecimal = 0;
     int base = 1;
     
@@ -379,39 +433,61 @@ public class MainControl implements Initializable{
     return valorDecimal;
   }//fim do metodo binaryToDecimal
 
+  /* ***************************************************************
+  * Metodo: moveWave()
+  * Funcao: move os elementos visuais (onda) de um indice para o outro
+  * Parametros: nenhum
+  * Retorno: void
+  *************************************************************** */
   public void moveWave() {
     Platform.runLater(() -> {
+      //ativa as imagens da onda da esquerda para a direita
       for (int i = 7; i >= 1; i--) {
         lowImgs[i].setVisible(lowImgs[i-1].isVisible());
         highImgs[i].setVisible(highImgs[i-1].isVisible());
         transitionImgs[i].setVisible(transitionImgs[i-1].isVisible());
       }
     });
-  }
+  }//fim do metodo moveWave()
 
-  public void activateWave(int bits) {
+  /* ***************************************************************
+  * Metodo: activateWave()
+  * Funcao: ativa as imagens na primeira posicao de acordo com o bit recebido.
+  * Parametros: int bit = bit extraido pela mascara no metodo MeioDeComunicacao()
+  * Retorno: void
+  *************************************************************** */
+  public void activateWave(int bit) {
     Platform.runLater(() -> {
       lowImgs[0].setVisible(false);
       transitionImgs[0].setVisible(false);
       highImgs[0].setVisible(false);
 
-      if (bits == 0){
+      //se o bit for 0, ativa a imagem correspondente
+      if (bit == 0){
         lowImgs[0].setVisible(true);
       }
       else{
         highImgs[0].setVisible(true);
       }
-      
-      if (bits != lastBit) {
+      //se o bit for diferente do ultimo bit recebido, entao vai ter uma transicao entre eles
+      //seja de 0 para 1 ou de 1 para 0
+      if (bit != lastBit) {
         transitionImgs[0].setVisible(true);
       }
       lastBit = currentBit;
     });
   }
 
+  /********************************************************************
+  * Metodo: enviarMensagem()
+  * Funcao: botao para o usuario iniciar todo o processo de envio da mensagem.
+  no SceneBuilder, foi definido que apos o clique, o botao chama o metodo inicial da camada fisica
+  * Parametros: ActionEvent = clique do mouse no botao
+  * Retorno: void
+  ****************************************************************** */
   @FXML 
   void enviarMensagem(ActionEvent event) {
-    if(!textArea.getText().isEmpty()){
+    if(!textArea.getText().isEmpty()){ //verifica se o usuario digitou alguma mensagem
       signalRadio.setVisible(true);
       sendButton.setDisable(true);
       sendButton.setVisible(false);
@@ -428,15 +504,22 @@ public class MainControl implements Initializable{
       backButton.setDisable(false);
   
     } else {
-      //Mostra uma mensagem de erro caso o usuario nao tenha selecionado um metodo de codificacao
+      //Mostra uma mensagem de erro caso o usuario nao tenha digitado nenhuma mensagem
       Alert alert = new Alert(AlertType.ERROR);
       alert.setTitle("ERRO!");
       alert.setHeaderText("Texto vazio!");
       alert.setContentText("Por favor, envie uma mensagem.");
       alert.showAndWait();
     }
-  }
+  }//fim do metodo enviarMensagem()
 
+  /********************************************************************
+  * Metodo: voltar()
+  * Funcao: botao que permite ao usuario retornar para o menu de selecao de codificacao
+  reativando os botoes, imagens e choiceBox na interface
+  * Parametros: ActionEvent = clique do mouse no botao
+  * Retorno: void
+  ****************************************************************** */
   @FXML
   void voltar(ActionEvent event) {
     asciiText.setVisible(false);
@@ -472,11 +555,18 @@ public class MainControl implements Initializable{
     for (int i = 0; i < 7; i++) {
       transitionImgs[i].setVisible(false);
     }
-  }
+  }//fim do metodo voltar()
 
+  /********************************************************************
+  * Metodo: continueButton()
+  * Funcao: botao de avanco depois que o usuario escolher o tipo de codificacao.
+  ativa e desativa imagens e a choiceBox apos escolha do usuario
+  * Parametros: ActionEvent = clique do mouse no botao
+  * Retorno: void
+  ****************************************************************** */
   @FXML
   void continueButton(ActionEvent event) {
-    if (!selectedMethod.isEmpty()) {
+    if (!selectedMethod.isEmpty()) { //verifica se o usuario escolheu alguma opcao
       optionsBox.setVisible(false);
       optionsBox.setDisable(true);
       continueButton.setVisible(false);
@@ -505,9 +595,9 @@ public class MainControl implements Initializable{
       alert.setContentText("Por favor, selecione um método de codificação.");
       alert.showAndWait();
     }
-  }
+  }//fim do metodo continueButton()
 
-    /********************************************************************
+  /********************************************************************
   * Metodo: optionsList()
   * Funcao: atribui o valor da opcao selecionada no choiceBox para a variavel selectedMethod
   * Parametros: ActionEvent event
@@ -518,8 +608,8 @@ public class MainControl implements Initializable{
     selectedMethod = optionsBox.getSelectionModel().getSelectedItem();
   }//fim do metodo positionList()
 
-    /********************************************************************
-  * Metodo: getPosition()
+  /********************************************************************
+  * Metodo: getCodificacao()
   * Funcao: atribui valores inteiros para as opcoes de codificao escolhida pelo usuario 
   * Parametros: nenhum
   * Retorno: int option = opcao escolhida
